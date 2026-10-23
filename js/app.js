@@ -2,25 +2,45 @@ import { OFFICES, DEPARTMENTS, TOTEM, METERS_PER_PX } from './data.js';
 import { createScene } from './scene.js';
 
 const IDLE_MS = 90_000; // vuelve a la pantalla de reposo tras 90 s sin uso
+const ATTRACT_MS = 5_500; // cambio de mensaje en reposo
 
 // Palabras extra para que la búsqueda encuentre lo que la gente suele escribir.
 const KEYWORDS = {
-  soporte: ['computador', 'pc', 'notebook', 'proyector', 'mouse', 'teclado', 'reparacion', 'equipo'],
-  redes: ['wifi', 'internet', 'red', 'acceso', 'bloqueo', 'pagina bloqueada'],
+  soporte: ['computador', 'pc', 'notebook', 'proyector', 'mouse', 'teclado', 'reparacion', 'equipo', 'impresora'],
+  redes: ['wifi', 'internet', 'red', 'acceso', 'bloqueo', 'conexion'],
   sistemas: ['plataforma', 'servidor', 'sistema'],
   transformacion: ['ley 21180', 'digital', 'desarrollo'],
   ingenieria: ['desarrollo', 'software'],
   ccosto: ['documentos', 'compras informatica'],
-  'adq-2': ['plan anual de compras'],
+  'adq-2': ['plan anual de compras', 'estado'],
   'adq-3': ['chilecompra', 'proveedor', 'mercadopublico'],
   'adq-4': ['orden de compra'],
   secretaria: ['documentos', 'recepcion', 'informacion'],
   abogados: ['legal', 'juridico', 'abogado'],
 };
 
+// Mensajes del modo reposo: [oficina, ícono, pregunta].
+const PROMPTS = [
+  ['soporte', '🔧', '¿Tu computador tiene problemas?'],
+  ['redes', '🌐', '¿Te quedaste sin internet?'],
+  ['adq-2', '🔎', '¿Quieres saber en qué va tu compra?'],
+  ['secretaria', '📥', '¿Vienes a entregar documentos?'],
+  ['soporte', '🖨️', '¿Falla tu impresora?'],
+  ['adq-3', '🧭', '¿No sabes cómo comprar en Mercado Público?'],
+  ['abogados', '⚖️', '¿Necesitas revisión legal de una contratación?'],
+  ['transformacion', '🏛️', '¿Dudas sobre la Ley 21.180?'],
+  ['adq-5', '📜', '¿Buscas un decreto que aprueba un llamado?'],
+  ['sistemas', '🧩', '¿Problemas con una plataforma municipal?'],
+];
+
+// Orden de la pantalla principal: lo más consultado primero.
+const ORDER = ['soporte', 'redes', 'secretaria', 'adq-2', 'adq-3', 'adq-1', 'sistemas', 'transformacion',
+  'ccosto', 'abogados', 'adq-4', 'adq-5', 'ingenieria', 'jefe-adq', 'jefe-tic'];
+
 const $ = (s) => document.querySelector(s);
 const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 const deptColor = (o) => (o.dept ? DEPARTMENTS[o.dept].color : '#a78bfa');
+const byId = (id) => OFFICES.find((o) => o.id === id);
 
 // ---------- Escalado del lienzo 1080x1920 ----------
 function fit() {
@@ -40,43 +60,27 @@ tick();
 setInterval(tick, 10_000);
 
 // ---------- Escena 3D ----------
-const view = createScene($('#viewport'), { onSelect: openOffice });
+const view = createScene($('#viewport'), { onSelect: (id) => openOffice(id) });
 
-// ---------- Indicaciones ----------
-function directions(office) {
+// ---------- Ubicación resumida ----------
+function where(office) {
   const [dx, dy] = office.door;
   const meters = Math.max(5, Math.round((view.routeLengthPx(office) * METERS_PER_PX) / 5) * 5);
-  const steps = [];
-
-  if (dx > TOTEM.x) {
-    steps.push('Desde el tótem, camine hacia el extremo del hall, en dirección contraria al pasillo de oficinas.');
-    steps.push(`La ${office.short} está al fondo, junto a la Escalera N°1.`);
-    return { steps, meters };
-  }
-
-  const north = dy < 230; // fila de Informática
+  if (dx > TOTEM.x) return `Al fondo del hall, junto a la Escalera N°1 · ≈ ${meters} m`;
+  const north = dy < 230;
   const side = north ? 'derecha' : 'izquierda';
-  steps.push('Desde el tótem, entre al pasillo central (de espaldas a los ascensores, gire hacia las oficinas).');
-
-  if (office.id.startsWith('jefe-')) {
-    steps.push(`Recorra el pasillo completo, pasando la Escalera N°2 (≈ ${meters} m).`);
-    steps.push(`Al final del pasillo, la oficina queda a su ${side}.`);
-  } else {
-    const before = OFFICES.filter((o) => o !== office
-      && !o.id.startsWith('jefe-')
-      && o.door[0] < TOTEM.x
-      && (o.door[1] < 230) === north
-      && o.door[0] > dx).length;
-    steps.push(`Avance por el pasillo ≈ ${meters} m.`);
-    steps.push(`Es la ${before + 1}.ª puerta a su ${side}.`);
-  }
-  steps.push(`Busque el letrero «${office.short}».`);
-  return { steps, meters };
+  if (office.id.startsWith('jefe-')) return `Al final del pasillo, a la ${side} · ≈ ${meters} m`;
+  const before = OFFICES.filter((o) => o !== office
+    && !o.id.startsWith('jefe-')
+    && o.door[0] < TOTEM.x
+    && (o.door[1] < 230) === north
+    && o.door[0] > dx).length;
+  return `${before + 1}.ª puerta a la ${side} del pasillo · ≈ ${meters} m`;
 }
 
-// ---------- Ficha ----------
-function openOffice(id) {
-  const office = OFFICES.find((o) => o.id === id);
+// ---------- Ficha de la oficina ----------
+function openOffice(id, highlight = null) {
+  const office = byId(id);
   if (!office) return;
   view.select(id);
   const detail = $('#detail');
@@ -84,20 +88,24 @@ function openOffice(id) {
   $('#detail-icon').textContent = office.icon;
   $('#detail-dept').textContent = office.dept ? DEPARTMENTS[office.dept].full : 'Espacio común';
   $('#detail-name').textContent = office.name;
-  $('#detail-services').replaceChildren(...office.services.map((s) => {
-    const li = document.createElement('li');
-    li.textContent = s;
-    return li;
+  $('#detail-tagline').textContent = office.tagline || '';
+  $('#detail-services').replaceChildren(...office.services.map((s, i) => {
+    const card = document.createElement('div');
+    card.className = `svc${i === highlight ? ' hl' : ''}`;
+    card.style.animationDelay = `${0.08 * i + 0.15}s`;
+    card.innerHTML = '<span class="svc-ic"></span><span class="svc-tx"><b></b><small></small></span>';
+    card.querySelector('.svc-ic').textContent = s.i;
+    card.querySelector('b').textContent = s.t;
+    card.querySelector('small').textContent = s.d;
+    return card;
   }));
-  const { steps, meters } = directions(office);
-  $('#detail-route').replaceChildren(...steps.map((s) => {
-    const li = document.createElement('li');
-    li.textContent = s;
-    return li;
-  }));
-  $('#detail-distance').textContent = `🚶 ≈ ${meters} m · ${Math.max(1, Math.round(meters / 60))} min caminando`;
+  const n = office.services.length;
+  $('#detail-services').dataset.n = n === 1 ? '1' : n > 4 ? 'many' : 'few';
+  $('#detail-where').textContent = `📍 ${where(office)}`;
   detail.hidden = false;
-  detail.scrollTop = 0;
+  detail.classList.remove('enter');
+  void detail.offsetWidth; // reinicia la animación
+  detail.classList.add('enter');
   hideKeyboard();
 }
 
@@ -107,38 +115,40 @@ function closeOffice() {
   view.resetView();
 }
 $('#detail-close').addEventListener('click', closeOffice);
+$('#detail-tour').addEventListener('click', () => view.playTour());
 
-// ---------- Listado y búsqueda ----------
+// ---------- Trámites (pantalla principal) ----------
 let filter = 'all';
 let query = '';
 
 function renderResults() {
   const q = norm(query.trim());
-  const list = OFFICES.filter((o) => filter === 'all' || o.dept === filter)
-    .map((o) => {
-      if (!q) return { o, hits: [] };
-      const hits = o.services.filter((s) => norm(s).includes(q));
-      const haystack = norm([o.name, o.short, o.dept ? DEPARTMENTS[o.dept].name : '', ...(KEYWORDS[o.id] || [])].join(' '));
-      return hits.length || haystack.includes(q) ? { o, hits } : null;
-    })
-    .filter(Boolean);
+  const items = [];
+  ORDER.map(byId).filter((o) => filter === 'all' || o.dept === filter).forEach((o) => {
+    const extra = norm([o.name, o.short, DEPARTMENTS[o.dept].name, ...(KEYWORDS[o.id] || [])].join(' '));
+    o.services.forEach((s, i) => {
+      if (!q || norm(`${s.t} ${s.d}`).includes(q) || extra.includes(q)) items.push({ o, s, i });
+    });
+  });
 
   const box = $('#results');
-  if (!list.length) {
-    box.innerHTML = '<div class="empty">No encontramos resultados.<br>Pruebe con otra palabra o consulte en Secretaría.</div>';
+  if (!items.length) {
+    box.innerHTML = '<div class="empty">No encontramos resultados 🤔<br>Prueba con otra palabra o consulta en Secretaría.</div>';
     return;
   }
-  box.replaceChildren(...list.map(({ o, hits }) => {
+  box.replaceChildren(...items.map(({ o, s, i }, n) => {
     const b = document.createElement('button');
-    b.className = 'result';
+    b.className = 'tile';
     b.style.setProperty('--c', deptColor(o));
-    b.innerHTML = `<span class="ic"></span><span class="tx"><b></b><small></small></span>`;
-    b.querySelector('.ic').textContent = o.icon;
-    b.querySelector('b').textContent = o.short;
-    b.querySelector('small').textContent = (hits.length ? hits : o.services).join(' · ');
-    b.addEventListener('click', () => openOffice(o.id));
+    b.style.animationDelay = `${Math.min(n, 12) * 0.03}s`;
+    b.innerHTML = '<span class="tile-ic"></span><b></b><span class="tile-office"></span>';
+    b.querySelector('.tile-ic').textContent = s.i;
+    b.querySelector('b').textContent = s.t;
+    b.querySelector('.tile-office').textContent = o.short;
+    b.addEventListener('click', () => openOffice(o.id, i));
     return b;
   }));
+  box.scrollTop = 0;
 }
 
 document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () => {
@@ -150,7 +160,7 @@ document.querySelectorAll('.tab').forEach((t) => t.addEventListener('click', () 
 function setQuery(q) {
   query = q;
   const txt = $('#search-text');
-  txt.textContent = q || 'Buscar trámite u oficina…';
+  txt.textContent = q || 'Buscar…';
   txt.classList.toggle('placeholder', !q);
   $('#search-clear').hidden = !q;
   renderResults();
@@ -214,37 +224,62 @@ $('#btn-plan').addEventListener('click', (e) => {
   view.setPlanVisible(on);
 });
 
-// ---------- Reposo ----------
+// ---------- Reposo: va mostrando trámites en el modelo ----------
 let idleTimer = null;
+let attractTimer = null;
+let promptIdx = 0;
+
+function showPrompt() {
+  const [id, icon, q] = PROMPTS[promptIdx % PROMPTS.length];
+  promptIdx++;
+  const office = byId(id);
+  const card = $('.attract-card');
+  card.style.setProperty('--c', deptColor(office));
+  card.classList.remove('swap');
+  void card.offsetWidth;
+  card.classList.add('swap');
+  $('#attract-icon').textContent = icon;
+  $('#attract-q').textContent = q;
+  $('#attract-a').textContent = `${office.short} te ayuda · ${office.dept === 'adq' ? 'Adquisiciones' : 'Informática'}`;
+  view.select(id);
+}
+
 function goIdle() {
   $('#detail').hidden = true;
-  view.select(null);
-  view.resetView();
   hideKeyboard();
   setQuery('');
   $('#attract').classList.remove('hidden');
-  view.setAutoRotate(true);
+  view.select(null);
+  view.resetView();
+  view.setAutoRotate(false);
+  clearInterval(attractTimer);
+  attractTimer = setInterval(showPrompt, ATTRACT_MS);
+  setTimeout(showPrompt, 1500);
 }
+
 function wake() {
   clearTimeout(idleTimer);
   idleTimer = setTimeout(goIdle, IDLE_MS);
 }
+
 $('#attract').addEventListener('pointerdown', (e) => {
   e.stopPropagation();
+  clearInterval(attractTimer);
   $('#attract').classList.add('hidden');
-  view.setAutoRotate(false);
+  view.select(null);
   view.resetView();
   wake();
 });
 window.addEventListener('pointerdown', wake, true);
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
-// Permite abrir una oficina directo por URL (útil para pruebas): ?oficina=soporte
+// Permite abrir una oficina directo por URL (útil para pruebas o QR): ?oficina=soporte
 const initial = new URLSearchParams(location.search).get('oficina');
 renderResults();
-if (!initial) view.setAutoRotate(true);
 if (initial) {
   $('#attract').classList.add('hidden');
   openOffice(initial);
+  wake();
+} else {
+  goIdle();
 }
-wake();

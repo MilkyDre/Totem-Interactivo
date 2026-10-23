@@ -4,15 +4,12 @@ Vista 3D interactiva del piso de **Adquisiciones** y del **Departamento de Gesti
 
 ## Qué hace
 
-- Modelo 3D del piso (Three.js) generado a partir del plano (`assets/plano.png`).
-- El edificio está orientado como lo ve la persona frente al tótem: el pasillo se aleja hacia arriba, **Informática a la derecha** y **Adquisiciones a la izquierda**.
-- Al tocar una oficina (en el modelo, en su etiqueta o en el listado):
-  - se resalta la oficina y se dibuja una **ruta animada** desde el tótem,
-  - se abre una ficha con los **trámites que atiende** y **cómo llegar** (puerta n.º X a su derecha/izquierda, distancia aproximada).
-- Buscador con **teclado en pantalla** (busca en nombres, trámites y palabras clave como "impresora", "wifi", "PAC", "Mercado Público").
-- Filtros: Todos / Adquisiciones / Informática.
-- Botón **Plano real** para ver el plano original sobre el piso 3D.
-- Tras 90 s sin uso vuelve a la **pantalla de reposo** (con rotación automática).
+- **Pantalla principal centrada en trámites:** "Toca lo que necesitas" muestra tarjetas con lo que se puede hacer (reparar un computador, estado de una compra, entregar documentos…), con lo más consultado primero.
+- **Modelo 3D detallado:** puestos de trabajo con monitores y sillas, mesas de reunión, ventanales, escaleras, ascensores, plantas, muros de vidrio con bordes de neón por departamento y efecto de brillo.
+- **Ficha de oficina:** al tocar un trámite u oficina se ilumina con un haz de luz, se dibuja la ruta desde el tótem y se listan todas las cosas que se pueden hacer ahí, con una ubicación resumida (p. ej. "3.ª puerta a la derecha · ≈ 25 m").
+- **▶ Ver recorrido:** vuelo tipo dron desde el tótem hasta la oficina.
+- **Modo reposo llamativo:** tras 90 s sin uso va rotando preguntas ("¿Falla tu impresora?") y resalta en 3D la oficina que ayuda.
+- Buscador con **teclado en pantalla**, filtros Compras / Informática y botón ▦ para ver el plano original sobre el modelo.
 - Funciona **sin internet**: Three.js está incluido en `vendor/`.
 
 ## Cómo ejecutarlo
@@ -29,11 +26,11 @@ Para abrir directamente una oficina (útil para pruebas): `index.html?oficina=so
 
 Todo está en [`js/data.js`](js/data.js):
 
-- `OFFICES`: nombre, nombre corto, ícono, trámites (`services`), polígono y puerta de cada oficina, en **píxeles del plano** (`assets/plano.png`).
+- `OFFICES`: nombre, ícono, frase corta (`tagline`), trámites (`services`: ícono, título y detalle), puestos de trabajo (`desks`), polígono y puerta de cada oficina, en **píxeles del plano** (`assets/plano.png`).
 - `TOTEM`: ubicación del tótem.
 - `LANDMARKS`: escaleras, ascensores y baños.
 
-Las palabras clave extra para la búsqueda están en `KEYWORDS`, en [`js/app.js`](js/app.js).
+En [`js/app.js`](js/app.js) están las palabras clave de búsqueda (`KEYWORDS`), el orden de la pantalla principal (`ORDER`) y las preguntas del modo reposo (`PROMPTS`).
 
 ## Estructura
 

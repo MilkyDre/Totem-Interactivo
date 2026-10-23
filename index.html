@@ -19,10 +19,10 @@
   <div id="stage">
     <header class="top">
       <div class="brand">
-        <div class="brand-mark">i</div>
+        <div class="brand-mark"><span>i</span></div>
         <div>
-          <h1>¿Dónde necesita ir?</h1>
-          <p>Directorio de oficinas · Adquisiciones e Informática</p>
+          <h1>¿Qué necesitas hacer hoy?</h1>
+          <p>Adquisiciones · Gestión de Sistemas y TICs</p>
         </div>
       </div>
       <div class="clock">
@@ -33,55 +33,60 @@
 
     <section id="viewport">
       <div id="labels"></div>
-      <div class="view-tools">
-        <button id="btn-reset" class="tool" aria-label="Volver a la vista inicial">⟲ Inicio</button>
-        <button id="btn-plan" class="tool" aria-pressed="false">▦ Plano real</button>
-      </div>
       <div class="legend">
         <span><i style="background:var(--tic)"></i>Informática</span>
         <span><i style="background:var(--adq)"></i>Adquisiciones</span>
         <span><i class="here"></i>Usted está aquí</span>
       </div>
+      <div class="view-tools">
+        <button id="btn-reset" class="tool" aria-label="Volver a la vista inicial">⟲</button>
+        <button id="btn-plan" class="tool" aria-pressed="false" aria-label="Ver plano original">▦</button>
+      </div>
     </section>
 
     <section id="panel">
-      <div class="search">
-        <div id="search-box" class="search-box" role="textbox" aria-label="Buscar trámite u oficina">
+      <div class="panel-head">
+        <h2>Toca lo que necesitas</h2>
+        <div id="search-box" class="search-box" role="textbox" aria-label="Buscar">
           <span class="search-icon">⌕</span>
-          <span id="search-text" class="placeholder">Buscar trámite u oficina…</span>
+          <span id="search-text" class="placeholder">Buscar…</span>
           <button id="search-clear" class="search-clear" hidden aria-label="Borrar">✕</button>
         </div>
       </div>
       <nav class="tabs" role="tablist">
-        <button class="tab active" data-filter="all" role="tab">Todos</button>
-        <button class="tab" data-filter="adq" role="tab">Adquisiciones</button>
-        <button class="tab" data-filter="tic" role="tab">Informática</button>
+        <button class="tab active" data-filter="all" role="tab">✨ Todo</button>
+        <button class="tab" data-filter="adq" role="tab"><i style="background:var(--adq)"></i>Compras</button>
+        <button class="tab" data-filter="tic" role="tab"><i style="background:var(--tic)"></i>Informática</button>
       </nav>
       <div id="results" class="results"></div>
       <div id="keyboard" class="keyboard" hidden></div>
     </section>
 
     <aside id="detail" class="detail" hidden>
+      <div class="detail-glow"></div>
       <button id="detail-close" class="detail-close" aria-label="Cerrar">✕</button>
       <div class="detail-head">
         <div id="detail-icon" class="detail-icon"></div>
         <div>
           <div id="detail-dept" class="detail-dept"></div>
           <h2 id="detail-name"></h2>
+          <p id="detail-tagline" class="detail-tagline"></p>
         </div>
       </div>
-      <h3>Aquí puede consultar por</h3>
-      <ul id="detail-services" class="detail-services"></ul>
-      <h3>Cómo llegar</h3>
-      <ol id="detail-route" class="detail-route"></ol>
-      <div id="detail-distance" class="detail-distance"></div>
+      <h3>Aquí puedes</h3>
+      <div id="detail-services" class="detail-services"></div>
+      <div class="detail-foot">
+        <div id="detail-where" class="detail-where"></div>
+        <button id="detail-tour" class="detail-tour">▶ Ver recorrido</button>
+      </div>
     </aside>
 
     <div id="attract" class="attract">
       <div class="attract-card">
-        <div class="pulse-dot"></div>
-        <h2>Toque la pantalla</h2>
-        <p>para encontrar oficinas y trámites</p>
+        <div id="attract-icon" class="attract-icon">👋</div>
+        <div id="attract-q" class="attract-q">¡Hola! ¿En qué te podemos ayudar?</div>
+        <div id="attract-a" class="attract-a">Busca trámites y oficinas en este piso</div>
+        <div class="attract-cta"><span class="pulse-dot"></span>Toca la pantalla para comenzar</div>
       </div>
     </div>
   </div>
