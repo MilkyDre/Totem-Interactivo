@@ -344,12 +344,19 @@ export function createScene(container, { onSelect }) {
   }
 
   const DIRS = { n: [0, -1], s: [0, 1], e: [1, 0], w: [-1, 0] };
-  function workstation([px, py, facing]) {
+  function workstation([px, py, facing, shape]) {
     const g = new THREE.Group();
     // Mesa
     g.add(box(2.8, 0.12, 1.4, woodMat, 0, 1.5, 0));
     g.add(box(0.1, 1.45, 1.3, deskLegMat, -1.3, 0.73, 0));
-    g.add(box(0.1, 1.45, 1.3, deskLegMat, 1.3, 0.73, 0));
+    if (shape === 'L') {
+      // Ala lateral del escritorio en L (hacia el lado de la silla)
+      g.add(box(1.3, 0.12, 2.6, woodMat, 2.05, 1.5, -0.6));
+      g.add(box(1.2, 1.45, 0.1, deskLegMat, 2.05, 0.73, -1.85));
+      g.add(box(0.1, 1.45, 1.3, deskLegMat, 2.65, 0.73, 0));
+    } else {
+      g.add(box(0.1, 1.45, 1.3, deskLegMat, 1.3, 0.73, 0));
+    }
     // Monitor y teclado (+Z local = hacia donde mira la persona)
     g.add(box(1.3, 0.8, 0.08, screenMat, 0, 2.15, 0.45));
     g.add(box(0.12, 0.35, 0.12, metalMat, 0, 1.72, 0.5));
