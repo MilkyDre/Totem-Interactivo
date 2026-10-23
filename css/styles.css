@@ -482,3 +482,4 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .person-tx { display: flex; flex-direction: column; }
 .person b { font-size: 23px; white-space: nowrap; }
 .person small { font-size: 18px; color: var(--muted); white-space: nowrap; }
+.person small:empty { display: none; }

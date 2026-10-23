@@ -360,21 +360,65 @@ export const OFFICES = [
 // Personas que trabajan en cada oficina. Formato: { name: 'Nombre Apellido', role: 'Cargo' }.
 // Si una oficina no tiene personas cargadas, la ficha simplemente no muestra el apartado.
 export const PEOPLE = {
-  'jefe-tic': [],
-  ccosto: [],
-  ingenieria: [],
-  sistemas: [],
-  soporte: [],
-  redes: [],
-  transformacion: [],
-  'jefe-adq': [],
-  secretaria: [],
-  abogados: [],
-  'adq-1': [],
-  'adq-2': [],
-  'adq-3': [],
-  'adq-4': [],
-  'adq-5': [],
+  'jefe-tic': [
+    { name: 'Felipe Alegre', role: 'Jefatura' },
+  ],
+  ccosto: [
+    { name: 'Camila Barahona' },
+  ],
+  ingenieria: [
+    { name: 'Claudia Cubillos' },
+    { name: 'Carlos Castillo' },
+  ],
+  sistemas: [
+    { name: 'Tomas Ovando' },
+    { name: 'Rodrigo Navarro' },
+  ],
+  soporte: [
+    { name: 'Jonathan Chandia' },
+    { name: 'Magdiel Vallejos' },
+    { name: 'Sebastian Feminis' },
+  ],
+  redes: [
+    { name: 'Manuel Mora' },
+    { name: 'Ignacio Rosales' },
+  ],
+  transformacion: [
+    { name: 'Camila Herrera' },
+  ],
+  'jefe-adq': [
+    { name: 'Berta Abarca', role: 'Jefatura' },
+  ],
+  secretaria: [
+    { name: 'Yubitza' },
+  ],
+  abogados: [
+    { name: 'Maria Jose' },
+    { name: 'Javiera' },
+    { name: 'Francisco' },
+    { name: 'Felipe' },
+  ],
+  'adq-1': [
+    { name: 'Diego' },
+    { name: 'Adriana' },
+  ],
+  'adq-2': [
+    { name: 'Javier' },
+    { name: 'Paula' },
+    { name: 'Elizabeth' },
+    { name: 'Jorge' },
+  ],
+  'adq-3': [
+    { name: 'Diego La Torre' },
+  ],
+  'adq-4': [
+    { name: 'Olenka' },
+    { name: 'Pedro' },
+    { name: 'Cristofer' },
+  ],
+  'adq-5': [
+    { name: 'Marcela' },
+  ],
   reuniones: [],
 };
 
