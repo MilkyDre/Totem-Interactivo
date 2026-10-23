@@ -357,6 +357,27 @@ export const OFFICES = [
   },
 ];
 
+// Personas que trabajan en cada oficina. Formato: { name: 'Nombre Apellido', role: 'Cargo' }.
+// Si una oficina no tiene personas cargadas, la ficha simplemente no muestra el apartado.
+export const PEOPLE = {
+  'jefe-tic': [],
+  ccosto: [],
+  ingenieria: [],
+  sistemas: [],
+  soporte: [],
+  redes: [],
+  transformacion: [],
+  'jefe-adq': [],
+  secretaria: [],
+  abogados: [],
+  'adq-1': [],
+  'adq-2': [],
+  'adq-3': [],
+  'adq-4': [],
+  'adq-5': [],
+  reuniones: [],
+};
+
 // Zonas no seleccionables (núcleos, escaleras, baños).
 export const LANDMARKS = [
   { id: 'nucleo-2', kind: 'core', label: 'Escalera N°2 · Baños', labelAt: [320, 110], poly: rect(175, 40, 430, 213), height: 2.4 },

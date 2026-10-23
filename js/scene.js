@@ -6,7 +6,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import {
-  PLAN, OFFICES, LANDMARKS, ELEVATORS, PLANTS, TOTEM, DEPARTMENTS, CORRIDOR_Y, buildingOutline,
+  OFFICES, LANDMARKS, ELEVATORS, PLANTS, TOTEM, DEPARTMENTS, CORRIDOR_Y, buildingOutline,
 } from './data.js';
 
 // Plano -> mundo. El edificio se gira para que el pasillo quede "hacia el fondo"
@@ -296,23 +296,6 @@ export function createScene(container, { onSelect }) {
   ));
   const guideMat = new THREE.MeshBasicMaterial({ color: COLORS.guide });
   [217, 243].forEach((y) => scene.add(wallBox([200, y], [1320, y], 0.02, 0.06, 0.12, guideMat, false)));
-
-  // ----- Plano original como textura (opcional) -----
-  const planTex = new THREE.TextureLoader().load('assets/plano.png');
-  planTex.colorSpace = THREE.SRGBColorSpace;
-  planTex.anisotropy = 8;
-  const planGeo = new THREE.BufferGeometry();
-  const corners = [[0, 0], [PLAN.width, 0], [PLAN.width, PLAN.height], [0, PLAN.height]];
-  planGeo.setAttribute('position', new THREE.Float32BufferAttribute(
-    corners.flatMap((c) => toWorld(c).toArray()), 3,
-  ));
-  planGeo.setAttribute('uv', new THREE.Float32BufferAttribute([0, 1, 1, 1, 1, 0, 0, 0], 2));
-  planGeo.setIndex([0, 2, 1, 0, 3, 2]);
-  planGeo.computeVertexNormals();
-  const planMesh = new THREE.Mesh(planGeo, new THREE.MeshBasicMaterial({ map: planTex, side: THREE.DoubleSide }));
-  planMesh.position.y = 0.05;
-  planMesh.visible = false;
-  scene.add(planMesh);
 
   // ----- Mobiliario -----
   const woodMat = new THREE.MeshStandardMaterial({ color: COLORS.wood, roughness: 0.55 });
@@ -825,14 +808,6 @@ export function createScene(container, { onSelect }) {
     zoom,
     rotate,
     toggleTop,
-    setPlanVisible(v) {
-      planMesh.visible = v;
-      rooms.forEach((r) => {
-        r.floor.material.transparent = v;
-        r.floor.material.opacity = v ? 0.3 : 1;
-        r.floor.material.needsUpdate = true;
-      });
-    },
     setAutoRotate(v) { controls.autoRotate = v; },
     routeLengthPx,
   };

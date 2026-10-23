@@ -463,3 +463,22 @@ button { font: inherit; color: inherit; cursor: pointer; }
   font-size: 19px; color: var(--muted); white-space: nowrap;
   backdrop-filter: blur(10px);
 }
+
+/* ---------- Personas de la oficina ---------- */
+.detail-people { position: relative; }
+.people-list { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 4px; touch-action: pan-x; }
+.person {
+  flex: none; display: flex; align-items: center; gap: 14px;
+  padding: 10px 20px 10px 10px; border-radius: 999px;
+  background: rgba(148, 163, 184, .08); border: 1px solid var(--line);
+}
+.person.hl { border-color: var(--c); background: color-mix(in srgb, var(--c) 18%, transparent); }
+.avatar {
+  width: 56px; height: 56px; border-radius: 50%; flex: none;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, var(--c), color-mix(in srgb, var(--c) 40%, #6366f1));
+  color: #0b1220; font-weight: 800; font-size: 22px;
+}
+.person-tx { display: flex; flex-direction: column; }
+.person b { font-size: 23px; white-space: nowrap; }
+.person small { font-size: 18px; color: var(--muted); white-space: nowrap; }

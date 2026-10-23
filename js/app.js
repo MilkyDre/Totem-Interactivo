@@ -1,4 +1,4 @@
-import { OFFICES, DEPARTMENTS, TOTEM, METERS_PER_PX } from './data.js';
+import { OFFICES, PEOPLE, DEPARTMENTS, TOTEM, METERS_PER_PX } from './data.js';
 import { createScene } from './scene.js';
 
 const IDLE_MS = 45_000; // sin uso durante 45 s: todo vuelve al estado inicial
@@ -80,7 +80,7 @@ function where(office) {
 }
 
 // ---------- Ficha de la oficina ----------
-function openOffice(id, highlight = null) {
+function openOffice(id, highlight = null, highlightPerson = null) {
   const office = byId(id);
   if (!office) return;
   view.select(id);
@@ -106,6 +106,18 @@ function openOffice(id, highlight = null) {
     card.querySelector('b').textContent = s.t;
     card.querySelector('small').textContent = s.d;
     return card;
+  }));
+  const people = PEOPLE[office.id] || [];
+  $('#detail-people').hidden = !people.length;
+  $('#people-list').replaceChildren(...people.map((person) => {
+    const chip = document.createElement('div');
+    chip.className = `person${person.name === highlightPerson ? ' hl' : ''}`;
+    const initials = person.name.split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+    chip.innerHTML = '<span class="avatar"></span><span class="person-tx"><b></b><small></small></span>';
+    chip.querySelector('.avatar').textContent = initials;
+    chip.querySelector('b').textContent = person.name;
+    chip.querySelector('small').textContent = person.role || '';
+    return chip;
   }));
   const n = office.services.length;
   $('#detail-services').dataset.n = n === 1 ? '1' : n > 4 ? 'many' : 'few';
@@ -150,12 +162,32 @@ function renderResults() {
     });
   });
 
+  // Personas cuyo nombre o cargo coincide con la búsqueda.
+  const people = [];
+  if (q) {
+    OFFICES.filter((o) => filter === 'all' || o.dept === filter).forEach((o) => {
+      (PEOPLE[o.id] || []).forEach((person) => {
+        if (norm(`${person.name} ${person.role || ''}`).includes(q)) people.push({ o, person });
+      });
+    });
+  }
+
   const box = $('#results');
-  if (!groups.size) {
+  if (!groups.size && !people.length) {
     box.innerHTML = '<div class="empty">No encontramos resultados 🤔<br>Prueba con otra palabra o consulta en Secretaría.</div>';
     return;
   }
-  box.replaceChildren(...[...groups.values()].map((entries, n) => {
+  const personTiles = people.map(({ o, person }) => {
+    const b = document.createElement('button');
+    b.className = 'tile';
+    b.style.setProperty('--c', deptColor(o));
+    b.innerHTML = '<span class="tile-ic">👤</span><b></b><span class="tile-office"></span>';
+    b.querySelector('b').textContent = person.name;
+    b.querySelector('.tile-office').textContent = o.short;
+    b.addEventListener('click', () => openOffice(o.id, null, person.name));
+    return b;
+  });
+  box.replaceChildren(...personTiles, ...[...groups.values()].map((entries, n) => {
     const { o, s, i } = bestOffice(entries);
     const b = document.createElement('button');
     b.className = 'tile';
@@ -240,11 +272,6 @@ $('#btn-reset').addEventListener('click', () => {
   if (!$('#detail').hidden) closeOffice();
   else view.resetView();
 });
-$('#btn-plan').addEventListener('click', (e) => {
-  const on = e.currentTarget.getAttribute('aria-pressed') !== 'true';
-  e.currentTarget.setAttribute('aria-pressed', String(on));
-  view.setPlanVisible(on);
-});
 
 document.querySelectorAll('[data-nav]').forEach((btn) => btn.addEventListener('click', () => {
   const nav = btn.dataset.nav;
@@ -290,11 +317,6 @@ function resetAll() {
   filter = 'all';
   document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x.dataset.filter === 'all'));
   renderResults();
-  const plan = $('#btn-plan');
-  if (plan.getAttribute('aria-pressed') === 'true') {
-    plan.setAttribute('aria-pressed', 'false');
-    view.setPlanVisible(false);
-  }
   view.select(null);
   view.resetView();
   document.querySelector('[data-nav="top"]').textContent = '2D';
