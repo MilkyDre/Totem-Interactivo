@@ -42,6 +42,14 @@
         <button id="btn-reset" class="tool" aria-label="Volver a la vista inicial">⟲</button>
         <button id="btn-plan" class="tool" aria-pressed="false" aria-label="Ver plano original">▦</button>
       </div>
+      <div class="nav-pad">
+        <button class="tool" data-nav="in" aria-label="Acercar">＋</button>
+        <button class="tool" data-nav="out" aria-label="Alejar">－</button>
+        <button class="tool" data-nav="left" aria-label="Girar a la izquierda">↺</button>
+        <button class="tool" data-nav="right" aria-label="Girar a la derecha">↻</button>
+        <button class="tool txt" data-nav="top" aria-label="Vista desde arriba">2D</button>
+      </div>
+      <div class="map-hint">☝️ Arrastra para mover · 🤏 pellizca para zoom · ✌️ gira con dos dedos</div>
     </section>
 
     <section id="panel">
@@ -80,6 +88,11 @@
         <button id="detail-tour" class="detail-tour">▶ Ver recorrido</button>
       </div>
     </aside>
+
+    <div id="idle-warn" class="idle-warn" hidden>
+      <div class="idle-text">¿Sigues ahí? Volviendo al inicio en <b id="idle-count">10</b> s · <u>Toca para continuar</u></div>
+      <div class="idle-track"><div id="idle-bar" class="idle-bar"></div></div>
+    </div>
 
     <div id="attract" class="attract">
       <div class="attract-card">

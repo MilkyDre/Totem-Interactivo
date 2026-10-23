@@ -223,10 +223,25 @@ export function createScene(container, { onSelect }) {
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
-  controls.minDistance = 20;
-  controls.maxDistance = 260;
-  controls.maxPolarAngle = 1.3;
+  controls.minDistance = 10;
+  controls.maxDistance = 300;
+  controls.maxPolarAngle = 1.45;
   controls.autoRotateSpeed = 0.5;
+  // Mover libremente como un mapa: un dedo desplaza, dos dedos acercan y giran.
+  controls.screenSpacePanning = false;
+  controls.panSpeed = 1.3;
+  controls.touches = { ONE: THREE.TOUCH.PAN, TWO: THREE.TOUCH.DOLLY_ROTATE };
+  controls.mouseButtons = { LEFT: THREE.MOUSE.PAN, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+  // Evita perder el edificio de vista al desplazar.
+  const LIMIT = new THREE.Box3(new THREE.Vector3(-30, 0, -95), new THREE.Vector3(30, 0, 95));
+  controls.addEventListener('change', () => {
+    const t = controls.target;
+    const clamped = t.clone().clamp(LIMIT.min, LIMIT.max);
+    if (!clamped.equals(t)) {
+      camera.position.add(clamped.clone().sub(t));
+      t.copy(clamped);
+    }
+  });
 
   // ----- Luces -----
   scene.add(new THREE.HemisphereLight(0xe0f2fe, 0x1e293b, 1.0));
@@ -686,7 +701,28 @@ export function createScene(container, { onSelect }) {
     };
   }
 
+  // Botones de navegación: acercar/alejar, girar y vista cenital.
+  const sph = new THREE.Spherical();
+  function orbit(fn) {
+    stopTour();
+    const off = camera.position.clone().sub(controls.target);
+    sph.setFromVector3(off);
+    fn(sph);
+    sph.radius = THREE.MathUtils.clamp(sph.radius, controls.minDistance, controls.maxDistance);
+    sph.phi = THREE.MathUtils.clamp(sph.phi, 0.05, controls.maxPolarAngle);
+    flyTo(controls.target.clone().add(new THREE.Vector3().setFromSpherical(sph)), controls.target.clone(), 600);
+  }
+  const zoom = (f) => orbit((p) => { p.radius *= f; });
+  const rotate = (a) => orbit((p) => { p.theta += a; });
+  let topView = false;
+  function toggleTop() {
+    topView = !topView;
+    orbit((p) => { p.phi = topView ? 0.05 : 0.75; });
+    return topView;
+  }
+
   function resetView() {
+    topView = false;
     stopTour();
     flyTo(HOME.position.clone(), HOME.target.clone());
   }
@@ -779,6 +815,9 @@ export function createScene(container, { onSelect }) {
     select,
     resetView,
     playTour,
+    zoom,
+    rotate,
+    toggleTop,
     setPlanVisible(v) {
       planMesh.visible = v;
       rooms.forEach((r) => {

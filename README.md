@@ -8,7 +8,9 @@ Vista 3D interactiva del piso de **Adquisiciones** y del **Departamento de Gesti
 - **Modelo 3D detallado:** puestos de trabajo con monitores y sillas, mesas de reunión, ventanales, escaleras, ascensores, plantas, muros de vidrio con bordes de neón por departamento y efecto de brillo.
 - **Ficha de oficina:** al tocar un trámite u oficina se ilumina con un haz de luz, se dibuja la ruta desde el tótem y se listan todas las cosas que se pueden hacer ahí, con una ubicación resumida (p. ej. "3.ª puerta a la derecha · ≈ 25 m").
 - **▶ Ver recorrido:** vuelo tipo dron desde el tótem hasta la oficina.
-- **Modo reposo llamativo:** tras 90 s sin uso va rotando preguntas ("¿Falla tu impresora?") y resalta en 3D la oficina que ayuda.
+- **Vuelve solo al inicio:** tras 45 s sin uso (con aviso y cuenta regresiva los últimos 10 s) se cierra la ficha, se limpian búsqueda y filtros, se apaga el plano y la cámara vuelve a la vista general.
+- **Mapa libre:** un dedo desplaza, pellizcar acerca/aleja, dos dedos giran; además hay botones ＋ － ↺ ↻ y vista 2D/3D.
+- **Modo reposo llamativo:** va rotando preguntas ("¿Falla tu impresora?") y resalta en 3D la oficina que ayuda.
 - Buscador con **teclado en pantalla**, filtros Compras / Informática y botón ▦ para ver el plano original sobre el modelo.
 - Funciona **sin internet**: Three.js está incluido en `vendor/`.
 
@@ -26,6 +28,7 @@ Para abrir directamente una oficina (útil para pruebas): `index.html?oficina=so
 
 Todo está en [`js/data.js`](js/data.js):
 
+- `ADQ_COMMON`: trámites que comparten todas las oficinas de Adquisiciones; cada oficina suma su especialidad (`star: true`).
 - `OFFICES`: nombre, ícono, frase corta (`tagline`), trámites (`services`: ícono, título y detalle), puestos de trabajo (`desks`), polígono y puerta de cada oficina, en **píxeles del plano** (`assets/plano.png`).
 - `TOTEM`: ubicación del tótem.
 - `LANDMARKS`: escaleras, ascensores y baños.

@@ -59,7 +59,20 @@ export const DEPARTMENTS = {
 // "Usted está aquí": hall frente a los 3 ascensores.
 export const TOTEM = { x: 1240, y: 192 };
 
-// Cada trámite: i = ícono, t = qué puede hacer, d = detalle breve.
+// Funciones que comparten todas las oficinas de Adquisiciones (cada una
+// agrega además su especialidad, marcada con star).
+const ADQ_COMMON = [
+  { i: '📑', t: 'Licitaciones', d: 'Consultas sobre licitaciones en curso' },
+  { i: '⚡', t: 'Compra ágil', d: 'Orientación y gestión de compras ágiles' },
+  { i: '🔎', t: 'Estado de mi compra', d: 'Saber en qué etapa va su proceso' },
+  { i: '🧭', t: 'Cómo comprar', d: 'Orientación paso a paso' },
+  { i: '🏛️', t: 'Mercado Público', d: 'Uso de la plataforma' },
+  { i: '📍', t: 'Seguimiento de procesos', d: 'Revisar el avance de su compra' },
+  { i: '💬', t: 'Dudas de proyectos', d: 'Resolver dudas sobre su proyecto de compra' },
+  { i: '📘', t: 'Guía de requerimientos', d: 'Cómo preparar un requerimiento de compra' },
+];
+
+// Cada trámite: i = ícono, t = qué puede hacer, d = detalle breve, star = especialidad.
 // desks: puestos de trabajo [x, y, orientación del usuario: 'n' | 's' | 'e' | 'w'].
 export const OFFICES = [
   // ---------- Departamento de Gestión de Sistemas y TICs (fila norte) ----------
@@ -75,7 +88,10 @@ export const OFFICES = [
     desks: [[120, 130, 'w']],
     roundTable: [70, 150],
     services: [
-      { i: '👔', t: 'Jefatura del departamento', d: 'Dirección del Depto. de Gestión de Sistemas y TICs' },
+      { i: '👔', t: 'Jefatura del departamento', d: 'Dirección del Depto. de Gestión de Sistemas y TICs', star: true },
+      { i: '📝', t: 'Solicitudes de proyectos TI', d: 'Presentar nuevas necesidades tecnológicas' },
+      { i: '📊', t: 'Planificación tecnológica', d: 'Prioridades y proyectos informáticos municipales' },
+      { i: '🤝', t: 'Coordinación con unidades', d: 'Reuniones y acuerdos con otras direcciones' },
     ],
   },
   {
@@ -89,8 +105,11 @@ export const OFFICES = [
     door: [522, 213],
     desks: [[485, 105, 'e']],
     services: [
-      { i: '📥', t: 'Entregar documentación', d: 'Recepción de documentos dirigidos al departamento' },
-      { i: '🧾', t: 'Compras de Informática', d: 'Compras del Depto. de Gestión de Sistemas y TICs' },
+      { i: '📥', t: 'Entregar documentación', d: 'Recepción de documentos dirigidos al departamento', star: true },
+      { i: '🧾', t: 'Compras de Informática', d: 'Compras del Depto. de Gestión de Sistemas y TICs', star: true },
+      { i: '💰', t: 'Presupuesto de Informática', d: 'Consultas sobre el presupuesto del departamento' },
+      { i: '📄', t: 'Facturas de proveedores TI', d: 'Seguimiento de facturas y pagos del área' },
+      { i: '📦', t: 'Recepción de equipos comprados', d: 'Coordinación de entregas de equipamiento' },
     ],
   },
   {
@@ -104,7 +123,10 @@ export const OFFICES = [
     door: [680, 213],
     desks: [[592, 90, 'w'], [638, 90, 'e'], [592, 160, 'w'], [638, 160, 'e']],
     services: [
-      { i: '⚙️', t: 'Ingeniería y desarrollo', d: 'Desarrollo de soluciones informáticas' },
+      { i: '⚙️', t: 'Ingeniería y desarrollo', d: 'Desarrollo de soluciones informáticas', star: true },
+      { i: '📐', t: 'Levantamiento de requerimientos', d: 'Analizamos lo que tu unidad necesita' },
+      { i: '🔗', t: 'Integración de sistemas', d: 'Conectar plataformas y datos entre áreas' },
+      { i: '🧪', t: 'Mejoras a sistemas existentes', d: 'Nuevas funciones y correcciones' },
     ],
   },
   {
@@ -118,8 +140,11 @@ export const OFFICES = [
     door: [820, 213],
     desks: [[745, 95, 'w'], [745, 145, 'w']],
     services: [
-      { i: '🧩', t: 'Sistemas y plataformas municipales', d: 'Consultas y problemas con las plataformas' },
-      { i: '🗄️', t: 'Servidores e infraestructura', d: 'Infraestructura tecnológica municipal' },
+      { i: '🧩', t: 'Sistemas y plataformas municipales', d: 'Consultas y problemas con las plataformas', star: true },
+      { i: '🗄️', t: 'Servidores e infraestructura', d: 'Infraestructura tecnológica municipal', star: true },
+      { i: '👤', t: 'Cuentas y claves de usuario', d: 'Creación y desbloqueo de usuarios en sistemas' },
+      { i: '📧', t: 'Correo institucional', d: 'Cuentas y problemas de correo' },
+      { i: '💾', t: 'Respaldos de información', d: 'Recuperación y resguardo de datos' },
     ],
   },
   {
@@ -150,8 +175,11 @@ export const OFFICES = [
     door: [995, 213],
     desks: [[1030, 85, 'e'], [1030, 140, 'e'], [975, 140, 'w']],
     services: [
-      { i: '🌐', t: 'Problemas de conexión', d: 'Internet, red cableada y Wi-Fi' },
-      { i: '🔒', t: 'Bloqueo de accesos', d: 'Bloqueo de accesos a sitios y servicios' },
+      { i: '🌐', t: 'Problemas de conexión', d: 'Internet, red cableada y Wi-Fi', star: true },
+      { i: '🔒', t: 'Bloqueo de accesos', d: 'Bloqueo de accesos a sitios y servicios', star: true },
+      { i: '🔌', t: 'Nuevos puntos de red', d: 'Instalación de puntos de red y cableado' },
+      { i: '📶', t: 'Wi-Fi para reuniones y eventos', d: 'Conectividad para actividades municipales' },
+      { i: '🛡️', t: 'Seguridad de la red', d: 'Firewall, VPN y accesos remotos' },
     ],
   },
   {
@@ -165,8 +193,11 @@ export const OFFICES = [
     door: [1120, 213],
     desks: [[1100, 90, 'n'], [1100, 150, 'n']],
     services: [
-      { i: '💡', t: 'Desarrollos digitales', d: 'Nuevas soluciones y proyectos digitales' },
-      { i: '🏛️', t: 'Ley 21.180', d: 'Transformación Digital del Estado' },
+      { i: '💡', t: 'Desarrollos digitales', d: 'Nuevas soluciones y proyectos digitales', star: true },
+      { i: '🏛️', t: 'Ley 21.180', d: 'Transformación Digital del Estado', star: true },
+      { i: '📄', t: 'Cero papel', d: 'Digitalización de procesos y documentos' },
+      { i: '🖥️', t: 'Trámites en línea', d: 'Llevar trámites municipales a internet' },
+      { i: '✍️', t: 'Firma electrónica', d: 'Uso de firma electrónica avanzada y simple' },
     ],
   },
 
@@ -183,7 +214,10 @@ export const OFFICES = [
     desks: [[125, 330, 'w']],
     roundTable: [70, 310],
     services: [
-      { i: '👔', t: 'Jefatura de Adquisiciones', d: 'Dirección del área de compras' },
+      { i: '👔', t: 'Jefatura de Adquisiciones', d: 'Dirección del área de compras', star: true },
+      { i: '✅', t: 'Aprobación de procesos', d: 'Visto bueno de procesos de compra' },
+      { i: '📅', t: 'Supervisión del PAC', d: 'Seguimiento del Plan Anual de Compras' },
+      { i: '🤝', t: 'Coordinación con unidades', d: 'Reuniones con unidades requirentes' },
     ],
   },
   {
@@ -216,7 +250,11 @@ export const OFFICES = [
     door: [570, 247],
     desks: [[530, 290, 'w'], [505, 365, 's'], [550, 365, 's']],
     services: [
-      { i: '⚖️', t: 'Revisión de legalidad', d: 'Antecedentes de contrataciones públicas' },
+      { i: '⚖️', t: 'Revisión de legalidad', d: 'Antecedentes de contrataciones públicas', star: true },
+      { i: '🧑‍⚖️', t: 'Asesoría jurídica', d: 'Orientación legal en compras públicas', star: true },
+      { i: '📝', t: 'Revisión de bases', d: 'Bases administrativas y técnicas de licitación' },
+      { i: '📃', t: 'Contratos con proveedores', d: 'Revisión y redacción de contratos' },
+      { i: '🚫', t: 'Reclamos e impugnaciones', d: 'Respuesta legal a reclamos de proveedores' },
     ],
   },
   {
@@ -230,9 +268,9 @@ export const OFFICES = [
     door: [620, 247],
     desks: [[655, 290, 'e'], [655, 365, 'e']],
     services: [
-      { i: '📋', t: 'Procesos a cargo', d: 'Consultar los procesos asignados' },
-      { i: '💬', t: 'Dudas de proyectos', d: 'Resolver dudas sobre su proyecto de compra' },
-      { i: '📑', t: 'Licitaciones', d: 'Consultas sobre licitaciones en curso' },
+      { i: '📋', t: 'Procesos a cargo', d: 'Consultar los procesos asignados', star: true },
+      { i: '💬', t: 'Dudas de proyectos', d: 'Resolver dudas sobre su proyecto de compra', star: true },
+      ...ADQ_COMMON.filter((c) => !['Procesos a cargo', 'Dudas de proyectos'].includes(c.t)),
     ],
   },
   {
@@ -246,11 +284,10 @@ export const OFFICES = [
     door: [730, 247],
     desks: [[760, 320, 'w'], [810, 320, 'e'], [810, 370, 'e']],
     services: [
-      { i: '📘', t: 'Guía de requerimientos', d: 'Cómo preparar un requerimiento de compra' },
-      { i: '📅', t: 'PAC', d: 'Plan Anual de Compras' },
-      { i: '🔎', t: 'Estado de mi compra', d: 'Saber en qué etapa va su proceso' },
-      { i: '⚡', t: 'Compra ágil', d: 'Gestión de compras ágiles' },
-      { i: '📑', t: 'Licitaciones', d: 'Apoyo en procesos de licitación' },
+      { i: '📘', t: 'Guía de requerimientos', d: 'Cómo preparar un requerimiento de compra', star: true },
+      { i: '📅', t: 'PAC', d: 'Plan Anual de Compras', star: true },
+      { i: '🔎', t: 'Estado de mi compra', d: 'Saber en qué etapa va su proceso', star: true },
+      ...ADQ_COMMON.filter((c) => !['Guía de requerimientos', 'PAC', 'Estado de mi compra'].includes(c.t)),
     ],
   },
   {
@@ -264,10 +301,10 @@ export const OFFICES = [
     door: [880, 247],
     desks: [[905, 310, 'e'], [905, 365, 'e']],
     services: [
-      { i: '📦', t: 'Entregar documentos de licitación', d: 'Documentación de licitaciones públicas' },
-      { i: '🧭', t: 'Cómo comprar', d: 'Orientación paso a paso' },
-      { i: '🏛️', t: 'Mercado Público', d: 'Uso de la plataforma' },
-      { i: '📍', t: 'Seguimiento de procesos', d: 'Revisar el avance de su compra' },
+      { i: '📦', t: 'Entregar documentos de licitación', d: 'Documentación de licitaciones públicas', star: true },
+      { i: '🧭', t: 'Cómo comprar', d: 'Orientación paso a paso', star: true },
+      { i: '📍', t: 'Seguimiento de procesos', d: 'Revisar el avance de su compra', star: true },
+      ...ADQ_COMMON.filter((c) => !['Entregar documentos de licitación', 'Cómo comprar', 'Seguimiento de procesos'].includes(c.t)),
     ],
   },
   {
@@ -281,7 +318,9 @@ export const OFFICES = [
     door: [1048, 247],
     desks: [[1000, 305, 'w'], [1000, 360, 'w']],
     services: [
-      { i: '💼', t: 'Operador de compras públicas', d: 'Gestión de compras en Mercado Público' },
+      { i: '💼', t: 'Operador de compras públicas', d: 'Gestión de compras en Mercado Público', star: true },
+      { i: '🧾', t: 'Órdenes de compra', d: 'Emisión y consulta de órdenes de compra', star: true },
+      ...ADQ_COMMON.filter((c) => !['Operador de compras públicas', 'Órdenes de compra'].includes(c.t)),
     ],
   },
   {
@@ -295,8 +334,9 @@ export const OFFICES = [
     door: [1085, 247],
     desks: [[1110, 305, 'e'], [1110, 360, 'e']],
     services: [
-      { i: '📜', t: 'Decretos que aprueban llamados', d: 'Elaboración de decretos de llamado' },
-      { i: '✉️', t: 'Respuestas', d: 'Respuestas a consultas sobre decretos' },
+      { i: '📜', t: 'Decretos que aprueban llamados', d: 'Elaboración de decretos de llamado', star: true },
+      { i: '✉️', t: 'Respuestas', d: 'Respuestas a consultas sobre decretos', star: true },
+      ...ADQ_COMMON.filter((c) => !['Decretos que aprueban llamados', 'Respuestas'].includes(c.t)),
     ],
   },
 

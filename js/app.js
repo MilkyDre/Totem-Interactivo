@@ -1,7 +1,8 @@
 import { OFFICES, DEPARTMENTS, TOTEM, METERS_PER_PX } from './data.js';
 import { createScene } from './scene.js';
 
-const IDLE_MS = 90_000; // vuelve a la pantalla de reposo tras 90 s sin uso
+const IDLE_MS = 45_000; // sin uso durante 45 s: todo vuelve al estado inicial
+const WARN_MS = 10_000; // los últimos 10 s se muestra una cuenta regresiva
 const ATTRACT_MS = 5_500; // cambio de mensaje en reposo
 
 // Palabras extra para que la búsqueda encuentre lo que la gente suele escribir.
@@ -92,8 +93,15 @@ function openOffice(id, highlight = null) {
   $('#detail-services').replaceChildren(...office.services.map((s, i) => {
     const card = document.createElement('div');
     card.className = `svc${i === highlight ? ' hl' : ''}`;
-    card.style.animationDelay = `${0.08 * i + 0.15}s`;
+    card.style.animationDelay = `${0.05 * i + 0.15}s`;
     card.innerHTML = '<span class="svc-ic"></span><span class="svc-tx"><b></b><small></small></span>';
+    // En Adquisiciones varias oficinas comparten trámites: se destaca la especialidad.
+    if (s.star && office.dept === 'adq') {
+      const tag = document.createElement('span');
+      tag.className = 'svc-star';
+      tag.textContent = '★ Especialidad';
+      card.appendChild(tag);
+    }
     card.querySelector('.svc-ic').textContent = s.i;
     card.querySelector('b').textContent = s.t;
     card.querySelector('small').textContent = s.d;
@@ -121,22 +129,34 @@ $('#detail-tour').addEventListener('click', () => view.playTour());
 let filter = 'all';
 let query = '';
 
+// Oficina a la que lleva un trámite que ofrecen varias: la que lo tiene como
+// especialidad o, si no, la más cercana al tótem.
+function bestOffice(entries) {
+  const star = entries.find((e) => e.s.star);
+  if (star) return star;
+  return entries.reduce((a, e) => (view.routeLengthPx(e.o) < view.routeLengthPx(a.o) ? e : a));
+}
+
 function renderResults() {
   const q = norm(query.trim());
-  const items = [];
+  const groups = new Map(); // un mosaico por trámite, aunque lo ofrezcan varias oficinas
   ORDER.map(byId).filter((o) => filter === 'all' || o.dept === filter).forEach((o) => {
     const extra = norm([o.name, o.short, DEPARTMENTS[o.dept].name, ...(KEYWORDS[o.id] || [])].join(' '));
     o.services.forEach((s, i) => {
-      if (!q || norm(`${s.t} ${s.d}`).includes(q) || extra.includes(q)) items.push({ o, s, i });
+      if (q && !norm(`${s.t} ${s.d}`).includes(q) && !extra.includes(q)) return;
+      const key = `${o.dept}:${s.t}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push({ o, s, i });
     });
   });
 
   const box = $('#results');
-  if (!items.length) {
+  if (!groups.size) {
     box.innerHTML = '<div class="empty">No encontramos resultados 🤔<br>Prueba con otra palabra o consulta en Secretaría.</div>';
     return;
   }
-  box.replaceChildren(...items.map(({ o, s, i }, n) => {
+  box.replaceChildren(...[...groups.values()].map((entries, n) => {
+    const { o, s, i } = bestOffice(entries);
     const b = document.createElement('button');
     b.className = 'tile';
     b.style.setProperty('--c', deptColor(o));
@@ -144,7 +164,9 @@ function renderResults() {
     b.innerHTML = '<span class="tile-ic"></span><b></b><span class="tile-office"></span>';
     b.querySelector('.tile-ic').textContent = s.i;
     b.querySelector('b').textContent = s.t;
-    b.querySelector('.tile-office').textContent = o.short;
+    b.querySelector('.tile-office').textContent = entries.length > 1
+      ? `${entries.length} oficinas de ${DEPARTMENTS[o.dept].name}`
+      : o.short;
     b.addEventListener('click', () => openOffice(o.id, i));
     return b;
   }));
@@ -224,10 +246,21 @@ $('#btn-plan').addEventListener('click', (e) => {
   view.setPlanVisible(on);
 });
 
+document.querySelectorAll('[data-nav]').forEach((btn) => btn.addEventListener('click', () => {
+  const nav = btn.dataset.nav;
+  if (nav === 'in') view.zoom(0.7);
+  else if (nav === 'out') view.zoom(1.4);
+  else if (nav === 'left') view.rotate(Math.PI / 6);
+  else if (nav === 'right') view.rotate(-Math.PI / 6);
+  else btn.textContent = view.toggleTop() ? '3D' : '2D';
+}));
+
 // ---------- Reposo: va mostrando trámites en el modelo ----------
-let idleTimer = null;
 let attractTimer = null;
+let firstPrompt = null;
 let promptIdx = 0;
+let lastActivity = performance.now();
+let idle = false;
 
 function showPrompt() {
   const [id, icon, q] = PROMPTS[promptIdx % PROMPTS.length];
@@ -244,27 +277,61 @@ function showPrompt() {
   view.select(id);
 }
 
-function goIdle() {
+function stopAttract() {
+  clearInterval(attractTimer);
+  clearTimeout(firstPrompt);
+}
+
+// Deja la pantalla exactamente como al encenderla.
+function resetAll() {
   $('#detail').hidden = true;
   hideKeyboard();
   setQuery('');
-  $('#attract').classList.remove('hidden');
+  filter = 'all';
+  document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x.dataset.filter === 'all'));
+  renderResults();
+  const plan = $('#btn-plan');
+  if (plan.getAttribute('aria-pressed') === 'true') {
+    plan.setAttribute('aria-pressed', 'false');
+    view.setPlanVisible(false);
+  }
   view.select(null);
   view.resetView();
-  view.setAutoRotate(false);
-  clearInterval(attractTimer);
+  document.querySelector('[data-nav="top"]').textContent = '2D';
+}
+
+function goIdle() {
+  idle = true;
+  $('#idle-warn').hidden = true;
+  resetAll();
+  $('#attract').classList.remove('hidden');
+  stopAttract();
   attractTimer = setInterval(showPrompt, ATTRACT_MS);
-  setTimeout(showPrompt, 1500);
+  firstPrompt = setTimeout(showPrompt, 1500);
 }
 
 function wake() {
-  clearTimeout(idleTimer);
-  idleTimer = setTimeout(goIdle, IDLE_MS);
+  lastActivity = performance.now();
+  $('#idle-warn').hidden = true;
 }
+
+// Revisa la inactividad y muestra el aviso "Volviendo al inicio en N s".
+setInterval(() => {
+  if (idle) return;
+  const left = IDLE_MS - (performance.now() - lastActivity);
+  if (left <= 0) {
+    goIdle();
+  } else if (left <= WARN_MS) {
+    $('#idle-warn').hidden = false;
+    $('#idle-count').textContent = Math.ceil(left / 1000);
+    $('#idle-bar').style.transform = `scaleX(${left / WARN_MS})`;
+  }
+}, 200);
 
 $('#attract').addEventListener('pointerdown', (e) => {
   e.stopPropagation();
-  clearInterval(attractTimer);
+  stopAttract();
+  idle = false;
   $('#attract').classList.add('hidden');
   view.select(null);
   view.resetView();
@@ -279,7 +346,6 @@ renderResults();
 if (initial) {
   $('#attract').classList.add('hidden');
   openOffice(initial);
-  wake();
 } else {
   goIdle();
 }
