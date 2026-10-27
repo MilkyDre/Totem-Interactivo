@@ -6,7 +6,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import {
-  OFFICES, LANDMARKS, ELEVATORS, PLANTS, TOTEM, DEPARTMENTS, CORRIDOR_Y, buildingOutline,
+  OFFICES, LANDMARKS, ELEVATORS, PUMPKINS, TOTEM, DEPARTMENTS, CORRIDOR_Y, buildingOutline,
 } from './data.js';
 
 // Plano -> mundo. El edificio se gira para que el pasillo quede "hacia el fondo"
@@ -208,7 +208,8 @@ export function createScene(container, { onSelect }) {
   Object.assign(labelRenderer.domElement.style, {
     position: 'absolute', inset: '0', pointerEvents: 'none',
   });
-  container.querySelector('#labels').appendChild(labelRenderer.domElement);
+  const labelRoot = container.querySelector('#labels');
+  labelRoot.appendChild(labelRenderer.domElement);
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(COLORS.bg);
@@ -290,12 +291,12 @@ export function createScene(container, { onSelect }) {
 
   // ----- Pasillo con líneas guía luminosas -----
   scene.add(flatMesh(
-    [[20, 213], [1475, 213], [1475, 247], [20, 247]],
+    [[425, 213], [1475, 213], [1475, 247], [425, 247]],
     new THREE.MeshStandardMaterial({ color: COLORS.corridor, roughness: 0.35, metalness: 0.1 }),
     0.01,
   ));
   const guideMat = new THREE.MeshBasicMaterial({ color: COLORS.guide });
-  [217, 243].forEach((y) => scene.add(wallBox([200, y], [1320, y], 0.02, 0.06, 0.12, guideMat, false)));
+  [217, 243].forEach((y) => scene.add(wallBox([440, y], [1320, y], 0.02, 0.06, 0.12, guideMat, false)));
 
   // ----- Mobiliario -----
   const woodMat = new THREE.MeshStandardMaterial({ color: COLORS.wood, roughness: 0.55 });
@@ -384,25 +385,54 @@ export function createScene(container, { onSelect }) {
     scene.add(g);
   }
 
-  function plant([px, py]) {
-    const p = toWorld([px, py]);
-    const pot = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.6, 0.45, 1.0, 16),
-      new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.4 }),
-    );
-    pot.position.set(p.x, 0.5, p.z);
-    pot.castShadow = true;
-    scene.add(pot);
-    const leaves = new THREE.Mesh(
-      new THREE.IcosahedronGeometry(1.1, 1),
-      new THREE.MeshStandardMaterial({ color: COLORS.plant, roughness: 0.8, flatShading: true }),
-    );
-    leaves.position.set(p.x, 1.9, p.z);
-    leaves.scale.y = 1.3;
-    leaves.castShadow = true;
-    scene.add(leaves);
+  // Calabaza de Halloween con cara tallada que brilla.
+  const pumpkinMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.55 });
+  const stemMat = new THREE.MeshStandardMaterial({ color: 0x4d7c0f, roughness: 0.8 });
+  const glowMat = new THREE.MeshBasicMaterial({ color: 0xffd166 });
+  function pumpkin([px, py], k) {
+    const g = new THREE.Group();
+    g.position.copy(toWorld([px, py]));
+    const lobe = new THREE.SphereGeometry(0.75, 20, 14);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const m = new THREE.Mesh(lobe, pumpkinMat);
+      m.scale.set(0.75, 0.95, 1);
+      m.position.set(Math.cos(a) * 0.42, 0.9, Math.sin(a) * 0.42);
+      m.rotation.y = -a;
+      m.castShadow = true;
+      g.add(m);
+    }
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.16, 0.5, 8), stemMat);
+    stem.position.set(0, 1.85, 0);
+    stem.rotation.z = 0.25;
+    g.add(stem);
+    // Ojos, nariz y boca hacia +Z local
+    const tri = new THREE.CylinderGeometry(0.2, 0.2, 0.1, 3);
+    [[-0.38, 1.1], [0.38, 1.1]].forEach(([x, y]) => {
+      const eye = new THREE.Mesh(tri, glowMat);
+      eye.rotation.x = Math.PI / 2;
+      eye.position.set(x, y, 1.12);
+      g.add(eye);
+    });
+    const nose = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.1, 3), glowMat);
+    nose.rotation.x = Math.PI / 2;
+    nose.rotation.y = Math.PI;
+    nose.position.set(0, 0.85, 1.15);
+    g.add(nose);
+    const mouth = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.16, 0.1), glowMat);
+    mouth.position.set(0, 0.55, 1.1);
+    g.add(mouth);
+    [-0.25, 0.15].forEach((x) => {
+      const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.1, 0.12), pumpkinMat);
+      tooth.position.set(x, 0.6, 1.14);
+      g.add(tooth);
+    });
+    // Mira hacia la cámara inicial (que está hacia +Z del mundo), con algo de variación.
+    g.rotation.y = (k % 3 - 1) * 0.35;
+    g.scale.setScalar(1.5);
+    scene.add(g);
   }
-  PLANTS.forEach(plant);
+  PUMPKINS.forEach(pumpkin);
 
   // ----- Núcleos: escaleras, ascensores, baños -----
   const coreMat = new THREE.MeshStandardMaterial({ color: COLORS.core, roughness: 0.7 });
@@ -410,7 +440,7 @@ export function createScene(container, { onSelect }) {
   const doorMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 });
   const lightMat = new THREE.MeshBasicMaterial({ color: 0x67e8f9 });
 
-  function stairs(poly) {
+  function stairs(poly, door) {
     const { x1, x2, y1, y2 } = bounds(poly);
     scene.add(flatMesh(poly, coreMat, 0.02));
     const lanes = [[y1 + 15, (y1 + y2) / 2 - 4], [(y1 + y2) / 2 + 4, y2 - 15]];
@@ -426,7 +456,7 @@ export function createScene(container, { onSelect }) {
         scene.add(box(Math.abs(b.x - a.x), h, Math.abs(b.z - a.z), stepMat, (a.x + b.x) / 2, h / 2, (a.z + b.z) / 2));
       }
     });
-    wallSegments(poly).forEach(([a, b]) => {
+    wallSegments(poly, door).forEach(([a, b]) => {
       const w = wallBox(a, b, 0, 1.2, WALL_T, sillMat);
       if (w) scene.add(w);
     });
@@ -441,11 +471,14 @@ export function createScene(container, { onSelect }) {
     ));
   }
 
+  const hallMat = new THREE.MeshStandardMaterial({ color: COLORS.corridor, roughness: 0.35, metalness: 0.1 });
   LANDMARKS.forEach((lm) => {
-    if (lm.kind === 'stairs') stairs(lm.poly);
+    if (lm.kind === 'stairs') stairs(lm.poly, lm.door);
+    else if (lm.kind === 'open') scene.add(flatMesh(lm.poly, hallMat, 0.015));
     else solidCore(lm.poly, lm.kind === 'elevators' ? 3.6 : 3.0);
+    if (!lm.label) return;
     const el = document.createElement('div');
-    el.className = 'landmark-label';
+    el.className = `landmark-label${lm.minor ? ' minor' : ''}`;
     el.textContent = lm.label;
     const obj = new CSS2DObject(el);
     obj.position.copy(toWorld(lm.labelAt || centroid(lm.poly), lm.kind === 'stairs' ? 3 : 4.2));
@@ -453,12 +486,13 @@ export function createScene(container, { onSelect }) {
   });
 
   // Puertas de los 3 ascensores con indicador luminoso
-  ELEVATORS.forEach(({ x1, x2, y }) => {
+  ELEVATORS.forEach(({ x1, x2, y, side }) => {
     const mid = (x1 + x2) / 2;
+    const s = side === 'n' ? -1 : 1; // cara del núcleo donde abre la puerta
     [[x1 + 5, mid - 0.5], [mid + 0.5, x2 - 5]].forEach(([a, b]) => {
-      scene.add(wallBox([a, y + 2], [b, y + 2], 0, 2.8, 0.1, doorMat));
+      scene.add(wallBox([a, y + 2 * s], [b, y + 2 * s], 0, 2.8, 0.1, doorMat));
     });
-    scene.add(wallBox([mid - 8, y + 2.5], [mid + 8, y + 2.5], 3.0, 3.25, 0.06, lightMat, false));
+    scene.add(wallBox([mid - 8, y + 2.5 * s], [mid + 8, y + 2.5 * s], 3.0, 3.25, 0.06, lightMat, false));
   });
 
   // ----- Oficinas -----
@@ -476,7 +510,8 @@ export function createScene(container, { onSelect }) {
       color, transparent: true, opacity: 0.14, roughness: 0.2, depthWrite: false,
     });
     const neon = new THREE.MeshBasicMaterial({ color: color.clone().multiplyScalar(0.9) });
-    wallSegments(office.poly, office.door).forEach(([a, b]) => {
+    // Espacios abiertos (Secretaría, sala de reuniones): sin muros.
+    if (!office.open) wallSegments(office.poly, office.door).forEach(([a, b]) => {
       [
         wallBox(a, b, 0, SILL_H, WALL_T, sillMat),
         wallBox(a, b, SILL_H, WALL_H, WALL_T * 0.6, roomGlass, false),
@@ -516,6 +551,7 @@ export function createScene(container, { onSelect }) {
   // ----- Tótem "Usted está aquí" -----
   const hereGroup = new THREE.Group();
   hereGroup.position.copy(toWorld([TOTEM.x, TOTEM.y]));
+  hereGroup.rotation.y = Math.PI / 2; // pantalla hacia los ascensores
   hereGroup.add(box(1.4, 0.2, 0.8, metalMat, 0, 0.1, 0));
   hereGroup.add(box(1.1, 3.4, 0.35, new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.3 }), 0, 1.9, 0));
   hereGroup.add(box(0.9, 2.6, 0.05, new THREE.MeshBasicMaterial({ color: 0x38bdf8 }), 0, 2.0, 0.2));
@@ -551,12 +587,14 @@ export function createScene(container, { onSelect }) {
   function routePoints(office) {
     const c = centroid(office.poly);
     const [dx, dy] = office.door;
+    // Por defecto: pasillo central -> puerta -> interior. Las oficinas del
+    // núcleo de la Escalera N°2 definen su propio recorrido (via / inside).
     const pts = [
       [TOTEM.x, TOTEM.y],
       [TOTEM.x, CORRIDOR_Y],
-      [dx, CORRIDOR_Y],
+      ...(office.via || [[dx, CORRIDOR_Y]]),
       [dx, dy],
-      [dx, c[1]],
+      office.inside || [dx, c[1]],
     ];
     return pts.filter((p, i) => i === 0 || Math.hypot(p[0] - pts[i - 1][0], p[1] - pts[i - 1][1]) > 1);
   }
@@ -646,8 +684,8 @@ export function createScene(container, { onSelect }) {
     const center = bx.getCenter(new THREE.Vector3());
     const size = bx.getSize(new THREE.Vector3());
     const span = Math.max(size.z, size.x * 1.3, 50);
-    const dist = span * 1.3 + 12;
-    center.z += span * 0.12; // deja el tótem visible sobre la ficha inferior
+    const dist = span * 1.4 + 12;
+    center.z += span * 0.07; // deja el tótem visible sobre la ficha inferior
     const dir = new THREE.Vector3(0, 1.25, 0.9).normalize();
     flyTo(center.clone().add(dir.multiplyScalar(dist)), center);
   }
@@ -793,6 +831,9 @@ export function createScene(container, { onSelect }) {
       const k = 0.5 + 0.5 * Math.sin(t * 3);
       r.floor.material.color.copy(r.floorColor).lerp(r.color, 0.25 + 0.35 * k);
     }
+
+    // Las etiquetas pequeñas del núcleo de la Escalera N°2 solo se ven de cerca.
+    labelRoot.classList.toggle('far', camera.position.distanceTo(controls.target) > 75);
 
     if (!tour) controls.update();
     composer.render();

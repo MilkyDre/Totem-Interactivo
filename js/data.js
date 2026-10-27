@@ -56,8 +56,9 @@ export const DEPARTMENTS = {
   },
 };
 
-// "Usted está aquí": hall frente a los 3 ascensores.
-export const TOTEM = { x: 1240, y: 192 };
+// "Usted está aquí": pegado a la pared de la Escalera N°1, junto a su puerta,
+// mirando hacia los 3 ascensores.
+export const TOTEM = { x: 1212, y: 241 };
 
 // Funciones que comparten todas las oficinas de Adquisiciones (cada una
 // agrega además su especialidad, marcada con star).
@@ -83,10 +84,14 @@ export const OFFICES = [
     short: 'Jefatura TICs',
     icon: '👔',
     tagline: 'Dirección del departamento',
-    poly: capRoom('left', 168, 55, 213),
-    door: [130, 213],
-    desks: [[120, 130, 'w', 'L']],
-    roundTable: [70, 150],
+    poly: capRoom('left', 168, 55, 190),
+    door: [168, 90],
+    // Se llega por el hall norte, junto al ascensor de la Escalera N°2.
+    via: [[435, 230], [435, 90]],
+    inside: [115, 90],
+    where: 'Al final del pasillo, sube por el hall de la derecha',
+    desks: [[125, 115, 'w', 'L']],
+    roundTable: [72, 145],
     services: [
       { i: '👔', t: 'Reunirte con la jefatura del departamento', d: 'Dirección del Depto. de Gestión de Sistemas y TICs', star: true },
       { i: '📝', t: 'Presentar un proyecto tecnológico', d: 'Presentar nuevas necesidades tecnológicas' },
@@ -101,7 +106,7 @@ export const OFFICES = [
     short: 'Centro de Costos',
     icon: '🧾',
     tagline: 'Documentos y compras de Informática',
-    poly: rect(430, 40, 540, 213),
+    poly: rect(445, 40, 540, 213),
     door: [522, 213],
     desks: [[485, 105, 'e', 'L']],
     services: [
@@ -209,10 +214,14 @@ export const OFFICES = [
     short: 'Jefatura Adquisiciones',
     icon: '👔',
     tagline: 'Dirección de Adquisiciones',
-    poly: capRoom('left', 168, 247, 395),
-    door: [130, 247],
-    desks: [[125, 330, 'w', 'L']],
-    roundTable: [70, 310],
+    poly: capRoom('left', 168, 195, 395),
+    door: [168, 372],
+    // Se llega pasando Secretaría por el hall sur.
+    via: [[440, 230], [440, 372]],
+    inside: [115, 372],
+    where: 'Al final del pasillo, pasa Secretaría y sigue por el hall de la izquierda',
+    desks: [[118, 245, 'w', 'L']],
+    roundTable: [75, 320],
     services: [
       { i: '👔', t: 'Reunirte con la jefatura de Adquisiciones', d: 'Dirección del área de compras', star: true },
       { i: '✅', t: 'Obtener el visto bueno de un proceso', d: 'Visto bueno de procesos de compra' },
@@ -227,8 +236,12 @@ export const OFFICES = [
     short: 'Secretaría',
     icon: '📥',
     tagline: 'Consultas, guías y recepción de documentos',
-    poly: rect(360, 247, 455, 410),
-    door: [430, 247],
+    poly: rect(340, 315, 455, 410),
+    door: [440, 315],
+    open: true, // mesón de atención, sin muros
+    via: [[440, 230]],
+    inside: [440, 345],
+    where: 'Al final del pasillo a la izquierda, frente a los baños',
     desks: [[405, 345, 's', 'L']],
     services: [
       { i: '📥', t: 'Entregar documentos', d: 'Recepción de documentos de Adquisiciones' },
@@ -350,6 +363,7 @@ export const OFFICES = [
     tagline: 'Espacio común',
     poly: capRoom('right', 1345, 262, 395),
     door: [1400, 262],
+    open: true, // espacio libre como el hall, sin muros
     meetingTable: [1405, 325],
     services: [
       { i: '🤝', t: 'Reunirte en la sala', d: 'Espacio para reuniones' },
@@ -409,7 +423,7 @@ export const PEOPLE = {
     { name: 'Jorge' },
   ],
   'adq-3': [
-    { name: 'Diego La Torre' },
+    { name: 'Diego De La Torre' },
   ],
   'adq-4': [
     { name: 'Olenka' },
@@ -422,20 +436,35 @@ export const PEOPLE = {
   reuniones: [],
 };
 
-// Zonas no seleccionables (núcleos, escaleras, baños).
+// Zonas no seleccionables (núcleos, escaleras, baños). kind 'open' = solo piso.
 export const LANDMARKS = [
-  { id: 'nucleo-2', kind: 'core', label: 'Escalera N°2 · Baños', labelAt: [320, 110], poly: rect(175, 40, 430, 213), height: 2.4 },
-  { id: 'escalera-2', kind: 'stairs', label: 'Escalera N°2', poly: rect(175, 247, 360, 410), height: 2.4 },
-  { id: 'escalera-1', kind: 'stairs', label: 'Escalera N°1', labelAt: [1260, 360], poly: rect(1150, 247, 1310, 410), height: 2.4 },
-  { id: 'ascensores', kind: 'elevators', label: 'Ascensores', labelAt: [1290, 80], poly: rect(1155, 45, 1330, 150), height: 2.6 },
-  { id: 'banos', kind: 'wc', label: 'Baños', poly: capRoom('right', 1345, 60, 198), height: 2.4 },
+  // Núcleo de la Escalera N°2 (según croquis): ascensor con la puerta a la
+  // escalera al lado, cocina y baño accesible; baños 1 y 2 frente a Secretaría.
+  { id: 'hall-norte', kind: 'open', label: 'Hall', poly: rect(170, 45, 445, 130) },
+  { id: 'paso-norte', kind: 'open', poly: rect(425, 130, 445, 213) },
+  { id: 'hall-sur', kind: 'open', poly: rect(175, 330, 340, 410) },
+  { id: 'paso-sur', kind: 'open', poly: rect(425, 247, 455, 315) },
+  { id: 'ascensor-2', minor: true, kind: 'elevators', label: 'Ascensor', poly: rect(175, 135, 268, 185) },
+  { id: 'puerta-esc-2', minor: true, kind: 'open', label: 'Puerta a escalera', poly: rect(270, 135, 335, 188) },
+  { id: 'cocina', minor: true, kind: 'wc', label: 'Cocina', poly: rect(340, 135, 425, 180) },
+  { id: 'bano-acc', minor: true, kind: 'wc', label: 'Baño accesible', poly: rect(340, 180, 425, 208) },
+  { id: 'escalera-2', kind: 'stairs', label: 'Escalera N°2', poly: rect(175, 190, 335, 328), door: [300, 190] },
+  { id: 'bano-2', minor: true, kind: 'wc', label: 'Baño 2', poly: rect(340, 210, 425, 258) },
+  { id: 'bano-1', minor: true, kind: 'wc', label: 'Baño 1', poly: rect(340, 260, 425, 310) },
+  // Extremo de los ascensores
+  { id: 'escalera-1', kind: 'stairs', label: 'Escalera N°1', labelAt: [1260, 360], poly: rect(1150, 247, 1310, 410), door: [1180, 247] },
+  { id: 'ascensores', kind: 'elevators', label: 'Ascensores', labelAt: [1290, 80], poly: rect(1155, 45, 1330, 150) },
+  { id: 'banos', kind: 'wc', label: 'Baños', poly: capRoom('right', 1345, 60, 198) },
 ];
 
 export const ELEVATORS = [
   [1165, 1213],
   [1218, 1266],
   [1271, 1319],
-].map(([x1, x2]) => ({ x1, x2, y: 150 }));
+].map(([x1, x2]) => ({ x1, x2, y: 150, side: 's' }))
+  .concat([{ x1: 180, x2: 263, y: 135, side: 'n' }]); // ascensor de la Escalera N°2, abre al hall
 
-// Plantas decorativas en el hall.
-export const PLANTS = [[1160, 200], [1330, 200], [1335, 255], [445, 200], [165, 225]];
+
+
+// Calabazas de Halloween decorativas en los halls.
+export const PUMPKINS = [[1160, 200], [1330, 200], [1335, 255], [1290, 236], [300, 95], [210, 95], [260, 375]];

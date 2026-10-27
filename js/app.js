@@ -67,12 +67,13 @@ const view = createScene($('#viewport'), { onSelect: (id) => openOffice(id) });
 function where(office) {
   const [dx, dy] = office.door;
   const meters = Math.max(5, Math.round((view.routeLengthPx(office) * METERS_PER_PX) / 5) * 5);
-  if (dx > TOTEM.x) return `Al fondo del hall, junto a la Escalera N°1 · ≈ ${meters} m`;
+  if (office.where) return `${office.where} · ≈ ${meters} m`;
+  if (dx > TOTEM.x) return `Espacio abierto al fondo del hall, junto a la Escalera N°1 · ≈ ${meters} m`;
   const north = dy < 230;
   const side = north ? 'derecha' : 'izquierda';
   if (office.id.startsWith('jefe-')) return `Al final del pasillo, a la ${side} · ≈ ${meters} m`;
   const before = OFFICES.filter((o) => o !== office
-    && !o.id.startsWith('jefe-')
+    && !o.where
     && o.door[0] < TOTEM.x
     && (o.door[1] < 230) === north
     && o.door[0] > dx).length;

@@ -1,11 +1,11 @@
 # Tótem Interactivo · Directorio 3D
 
-Vista 3D interactiva del piso de **Adquisiciones** y del **Departamento de Gestión de Sistemas y TICs**, pensada para un tótem táctil vertical (1080 × 1920). El tótem está en el hall, frente a los 3 ascensores ("Usted está aquí").
+Vista 3D interactiva del piso de **Adquisiciones** y del **Departamento de Gestión de Sistemas y TICs**, pensada para un tótem táctil vertical (1080 × 1920). El tótem está pegado a la pared de la Escalera N°1, junto a su puerta, mirando a los 3 ascensores ("Usted está aquí").
 
 ## Qué hace
 
 - **Pantalla principal centrada en trámites:** "Toca lo que necesitas" muestra tarjetas con lo que se puede hacer (reparar un computador, estado de una compra, entregar documentos…), con lo más consultado primero.
-- **Modelo 3D detallado:** puestos de trabajo (rectos y en L, como en el plano) con monitores y sillas, mesas de reunión, ventanales, escaleras, ascensores, plantas, muros de vidrio con bordes de neón por departamento y efecto de brillo.
+- **Modelo 3D detallado:** puestos de trabajo (rectos y en L, como en el plano) con monitores y sillas, mesas de reunión, ventanales, escaleras, ascensores, cocina y baños del núcleo de la Escalera N°2, calabazas de Halloween, muros de vidrio con bordes de neón por departamento y efecto de brillo.
 - **Ficha de oficina:** al tocar un trámite u oficina se ilumina con un haz de luz, se dibuja la ruta desde el tótem y se listan todas las cosas que se pueden hacer ahí, con una ubicación resumida (p. ej. "3.ª puerta a la derecha · ≈ 25 m").
 - **▶ Ver cómo llegar:** botón destacado bajo el nombre de la oficina; vuelo tipo dron desde el tótem hasta la oficina.
 - **Vuelve solo al inicio:** tras 45 s sin uso (con aviso y cuenta regresiva los últimos 10 s) se cierra la ficha, se limpian búsqueda y filtros y la cámara vuelve a la vista general.
@@ -32,7 +32,8 @@ Todo está en [`js/data.js`](js/data.js):
 - `OFFICES`: nombre, ícono, frase corta (`tagline`), trámites (`services`: ícono, título y detalle), puestos de trabajo (`desks`), polígono y puerta de cada oficina, en **píxeles del plano** (`assets/plano.png`).
 - `PEOPLE`: personas que trabajan en cada oficina (nombre y cargo).
 - `TOTEM`: ubicación del tótem.
-- `LANDMARKS`: escaleras, ascensores y baños.
+- `LANDMARKS`: escaleras, ascensores, baños, cocina y halls.
+- `PUMPKINS`: posición de las calabazas decorativas.
 
 En [`js/app.js`](js/app.js) están las palabras clave de búsqueda (`KEYWORDS`), el orden de la pantalla principal (`ORDER`) y las preguntas del modo reposo (`PROMPTS`).
 
