@@ -13,6 +13,7 @@ Vista 3D interactiva del piso de **Adquisiciones** y del **Departamento de Gesti
 - **Modo reposo llamativo:** va rotando preguntas ("¿Falla tu impresora?") y resalta en 3D la oficina que ayuda.
 - Buscador con **teclado en pantalla**, filtros Compras / Informática y búsqueda por nombre de funcionario.
 - Funciona **sin internet**: Three.js está incluido en `vendor/`.
+- **Fluidez:** lo estático se une en pocas mallas, las sombras se calculan una sola vez y, si el equipo va lento, la calidad baja sola (primero sin brillo, luego sin sombras, luego menos resolución). Los scripts de inicio fuerzan la aceleración por GPU del navegador.
 
 ## Cómo ejecutarlo
 
@@ -46,5 +47,6 @@ js/data.js        Oficinas, trámites y geometría del plano
 js/scene.js       Escena 3D, rutas y cámara
 js/app.js         Interfaz: búsqueda, ficha, teclado, reposo
 assets/plano.png  Plano original (referencia para las coordenadas)
+assets/logo-coquimbo.png  Escudo de Coquimbo (cabecera)
 vendor/three/     Three.js r160 (licencia MIT)
 ```

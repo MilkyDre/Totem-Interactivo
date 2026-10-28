@@ -5,6 +5,7 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {
   OFFICES, LANDMARKS, ELEVATORS, PUMPKINS, TOTEM, DEPARTMENTS, CORRIDOR_Y, buildingOutline,
 } from './data.js';
@@ -195,10 +196,12 @@ export function createScene(container, { onSelect }) {
   const height = container.clientHeight;
 
   const renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));
+  renderer.setPixelRatio(Math.min(1.25, window.devicePixelRatio || 1));
   renderer.setSize(width, height);
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  // El edificio no se mueve: las sombras se calculan una sola vez.
+  renderer.shadowMap.autoUpdate = false;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   container.prepend(renderer.domElement);
@@ -218,7 +221,11 @@ export function createScene(container, { onSelect }) {
 
   const composer = new EffectComposer(renderer);
   composer.addPass(new RenderPass(scene, camera));
-  composer.addPass(new UnrealBloomPass(new THREE.Vector2(width, height), 0.7, 0.5, 0.85));
+  const bloomPass = new UnrealBloomPass(new THREE.Vector2(width, height), 0.7, 0.5, 0.85);
+  // El brillo se calcula a media resolución (se nota igual y cuesta 4 veces menos).
+  const bloomSetSize = bloomPass.setSize.bind(bloomPass);
+  bloomPass.setSize = (w, h) => bloomSetSize(Math.round(w / 2), Math.round(h / 2));
+  composer.addPass(bloomPass);
   composer.addPass(new OutputPass());
 
   const controls = new OrbitControls(camera, renderer.domElement);
@@ -273,7 +280,7 @@ export function createScene(container, { onSelect }) {
   ));
 
   const sillMat = new THREE.MeshStandardMaterial({ color: COLORS.sill, roughness: 0.5 });
-  const glassMat = new THREE.MeshPhysicalMaterial({
+  const glassMat = new THREE.MeshStandardMaterial({
     color: COLORS.glass, transparent: true, opacity: 0.16, roughness: 0.05, metalness: 0.1, depthWrite: false,
   });
   const mullionMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, metalness: 0.6, roughness: 0.3 });
@@ -506,7 +513,7 @@ export function createScene(container, { onSelect }) {
     scene.add(floor);
     pickables.push(floor);
 
-    const roomGlass = new THREE.MeshPhysicalMaterial({
+    const roomGlass = new THREE.MeshStandardMaterial({
       color, transparent: true, opacity: 0.14, roughness: 0.2, depthWrite: false,
     });
     const neon = new THREE.MeshBasicMaterial({ color: color.clone().multiplyScalar(0.9) });
@@ -573,6 +580,40 @@ export function createScene(container, { onSelect }) {
   hereLabel.position.y = 4.4;
   hereGroup.add(hereLabel);
   scene.add(hereGroup);
+
+  // ----- Optimización: une todo lo estático en pocas mallas -----
+  // Cientos de muros, muebles y ventanales se dibujan como unas pocas mallas
+  // (una por material), lo que reduce mucho el trabajo de la tarjeta gráfica.
+  // Los pisos de oficina se mantienen aparte porque se tocan y se iluminan.
+  function mergeStatic() {
+    scene.updateMatrixWorld(true);
+    const buckets = new Map();
+    const remove = [];
+    scene.traverse((obj) => {
+      if (!obj.isMesh || obj.userData.officeId || pickables.includes(obj)) return;
+      for (let p = obj.parent; p; p = p.parent) if (p === hereGroup) return;
+      const key = `${obj.material.uuid}|${obj.castShadow ? 1 : 0}`;
+      if (!buckets.has(key)) buckets.set(key, { material: obj.material, cast: obj.castShadow, geos: [] });
+      let g = obj.geometry.index ? obj.geometry.toNonIndexed() : obj.geometry.clone();
+      g.clearGroups();
+      for (const name of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(name)) g.deleteAttribute(name);
+      if (!g.attributes.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(new Float32Array((g.attributes.position.count) * 2), 2));
+      g.applyMatrix4(obj.matrixWorld);
+      buckets.get(key).geos.push(g);
+      remove.push(obj);
+    });
+    remove.forEach((obj) => obj.parent.remove(obj));
+    buckets.forEach(({ material, cast, geos }) => {
+      const merged = new THREE.Mesh(mergeGeometries(geos, false), material);
+      merged.castShadow = cast;
+      merged.receiveShadow = true;
+      merged.matrixAutoUpdate = false;
+      scene.add(merged);
+      geos.forEach((g) => g.dispose());
+    });
+    renderer.shadowMap.needsUpdate = true;
+  }
+  mergeStatic();
 
   // ----- Ruta y marcadores -----
   const chevrons = chevronTexture();
@@ -778,6 +819,37 @@ export function createScene(container, { onSelect }) {
   });
 
   // ----- Bucle -----
+  // ----- Calidad adaptable: si el equipo va lento, se baja sola -----
+  let useBloom = true;
+  let qualityLevel = 0;
+  let frames = 0;
+  let lowWindows = 0;
+  let windowStart = performance.now() + 4000; // deja pasar la carga inicial
+  function adaptQuality() {
+    const now = performance.now();
+    if (now < windowStart) return;
+    frames++;
+    if (now - windowStart < 2000) return;
+    const fps = (frames * 1000) / (now - windowStart);
+    window.__totemStats = { fps: Math.round(fps), level: qualityLevel, calls: renderer.info.render.calls };
+    frames = 0;
+    windowStart = now;
+    // Baja un nivel solo tras dos mediciones lentas seguidas (evita falsas alarmas).
+    lowWindows = fps < 40 ? lowWindows + 1 : 0;
+    if (lowWindows < 2 || qualityLevel >= 3) return;
+    lowWindows = 0;
+    qualityLevel++;
+    if (qualityLevel === 1) {
+      useBloom = false; // sin efecto de brillo
+    } else if (qualityLevel === 2) {
+      renderer.shadowMap.enabled = false; // sin sombras
+      scene.traverse((o) => { if (o.material) o.material.needsUpdate = true; });
+    } else {
+      renderer.setPixelRatio(0.75); // menos resolución
+      renderer.setSize(width, height);
+    }
+  }
+
   const clock = new THREE.Clock();
   const dir = new THREE.Vector3();
   function loop() {
@@ -836,7 +908,9 @@ export function createScene(container, { onSelect }) {
     labelRoot.classList.toggle('far', camera.position.distanceTo(controls.target) > 75);
 
     if (!tour) controls.update();
-    composer.render();
+    if (useBloom) composer.render();
+    else renderer.render(scene, camera);
+    adaptQuality();
     labelRenderer.render(scene, camera);
     requestAnimationFrame(loop);
   }

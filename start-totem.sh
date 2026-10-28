@@ -7,5 +7,5 @@ SERVER=$!
 trap 'kill $SERVER' EXIT
 sleep 1
 BROWSER=$(command -v chromium || command -v chromium-browser || command -v google-chrome)
-"$BROWSER" --kiosk --noerrdialogs --disable-infobars --disable-pinch --overscroll-history-navigation=0 \
+"$BROWSER" --kiosk --ignore-gpu-blocklist --enable-gpu-rasterization --enable-zero-copy --noerrdialogs --disable-infobars --disable-pinch --overscroll-history-navigation=0 \
   --incognito "http://127.0.0.1:$PORT/index.html"
