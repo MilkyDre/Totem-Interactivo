@@ -396,7 +396,7 @@ export function createScene(container, { onSelect }) {
   const pumpkinMat = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.55 });
   const stemMat = new THREE.MeshStandardMaterial({ color: 0x4d7c0f, roughness: 0.8 });
   const glowMat = new THREE.MeshBasicMaterial({ color: 0xffd166 });
-  function pumpkin([px, py], k) {
+  function pumpkin([px, py, facing]) {
     const g = new THREE.Group();
     g.position.copy(toWorld([px, py]));
     const lobe = new THREE.SphereGeometry(0.75, 20, 14);
@@ -434,9 +434,11 @@ export function createScene(container, { onSelect }) {
       tooth.position.set(x, 0.6, 1.14);
       g.add(tooth);
     });
-    // Mira hacia la cámara inicial (que está hacia +Z del mundo), con algo de variación.
-    g.rotation.y = (k % 3 - 1) * 0.35;
-    g.scale.setScalar(1.5);
+    // La cara mira hacia afuera del muro.
+    const [dx, dy] = DIRS[facing];
+    const b = toWorld([px + dx, py + dy]);
+    g.rotation.y = Math.atan2(b.x - g.position.x, b.z - g.position.z);
+    g.scale.setScalar(0.5);
     scene.add(g);
   }
   PUMPKINS.forEach(pumpkin);

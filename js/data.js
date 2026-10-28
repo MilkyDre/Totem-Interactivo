@@ -466,5 +466,14 @@ export const ELEVATORS = [
 
 
 
-// Calabazas de Halloween decorativas en los halls.
-export const PUMPKINS = [[1160, 200], [1330, 200], [1335, 255], [1290, 236], [300, 95], [210, 95], [260, 375]];
+// Calabazas de Halloween decorativas, apegadas a los muros de los halls.
+// [x, y, hacia dónde mira la cara: 'n' | 's' | 'e' | 'w'].
+export const PUMPKINS = [
+  [1157, 200, 'e'], // muro de Transformación Digital
+  [1160, 157, 'e'], // esquina del núcleo de ascensores
+  [1338, 190, 'w'], // muro de los baños
+  [1295, 240, 'n'], // muro de la Escalera N°1, lejos de la puerta y del tótem
+  [300, 47, 's'], // hall norte (Escalera N°2)
+  [215, 47, 's'],
+  [260, 403, 'n'], // hall sur
+];
